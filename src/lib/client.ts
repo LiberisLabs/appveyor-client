@@ -1,5 +1,6 @@
 import AppVeyorClient from './appveyor';
 import ProjectsClient from './projects';
+import BuildsClient from './builds';
 
 export default class {
   private _client: AppVeyorClient;
@@ -10,5 +11,9 @@ export default class {
 
   public projects() {
     return new ProjectsClient(this._client);
+  }
+
+  public builds() {
+    return new BuildsClient(this._client);
   }
 }
