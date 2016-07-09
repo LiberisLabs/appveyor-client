@@ -6,6 +6,7 @@
     "source-map-support": "registry:npm/source-map-support#0.3.0+20160413183746"
   },
   "globalDependencies": {
+    "body-parser": "registry:dt/body-parser#0.0.0+20160619023215",
     "express": "registry:dt/express#4.0.0+20160317120654",
     "express-serve-static-core": "registry:dt/express-serve-static-core#0.0.0+20160602151406",
     "node": "registry:dt/node#6.0.0+20160608110640",

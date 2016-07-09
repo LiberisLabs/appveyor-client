@@ -1,152 +1,74 @@
-import { IScopedHttpClient, IHttpResponse } from 'scoped-http-client';
+import * as http from 'http';
 
-export interface IAppVeyorResponse {
+export interface IResponse {
   ok: boolean;
   statusCode: number;
-  body?: any;
+  body: any;
 }
 
-export interface IBuildResponse extends IAppVeyorResponse {
-  body?: {
-    accountName: string;
-    projectSlug: string;
-    version: string;
-    link: string;
+export default class {
+  public protocol: string;
+  public hostname: string;
+  public port: number;
+
+  constructor(private _token: string) {
+    this.protocol = 'https:';
+    this.hostname = 'ci.appveyor.com';
+    this.port = 443;
   }
-}
 
-export interface IDeployResponse extends IAppVeyorResponse {
-  body?: {
-    link: string;
+  public get(path: string): Promise<IResponse> {
+    return this.do('GET', path);
   }
-}
 
-export interface IBuildsResponse extends IAppVeyorResponse {
-  body?: {
-    accountName: string;
-    projectSlug: string;
-    builds: Array<IBuildsBuildResponse>
+  public post(path: string, data: any): Promise<IResponse> {
+    return this.do('POST', path, data);
   }
-}
 
-interface IBuildsBuildResponse {
-  version: string;
-  message: string;
-  branch: string;
-  committer: string;
-  status: string;
-  link: string;
-}
+  public put(path: string, data: any): Promise<IResponse> {
+    return this.do('PUT', path, data);
+  }
 
-export interface IAppVeyor {
-  build(projectSlug: string): Promise<IBuildResponse>;
-  builds(projectSlug: string, count: number): Promise<IBuildsResponse>;
-  deploy(projectSlug: string, version: string, environment: string): Promise<IDeployResponse>;
-}
+  public delete(path: string): Promise<IResponse> {
+    return this.do('DELETE', path);
+  }
 
-export class AppVeyor implements IAppVeyor {
-  constructor(private http: (url: string) => IScopedHttpClient, private token: string, private accountName: string) { }
+  private do(method: string, path: string, data?: any): Promise<IResponse> {
+    const options = {
+      method: method,
+      protocol: this.protocol,
+      port: this.port,
+      hostname: this.hostname,
+      path: path,
+      headers: {
+        'Authorization': `Bearer ${this._token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    };
 
-  public build(projectSlug) {
-    const body = JSON.stringify({
-      accountName: this.accountName,
-      projectSlug: projectSlug
-    });
+    return new Promise((resolve, reject) => {
+      let req = http.request(options, (res) => {
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          return resolve({ok: false, statusCode: res.statusCode, body: null});
+        }
 
-    return new Promise<IBuildResponse>((resolve, reject) => {
-      this.post('https://ci.appveyor.com/api/builds', body, (err, resp, data) => {
-        if (err) return reject(err);
-        if (resp.statusCode !== 200) return resolve({
-          ok: false,
-          statusCode: resp.statusCode
-        });
-
-        const o = JSON.parse(data);
-
-        resolve({
+        let chunks = new Array<Buffer>();
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () => resolve({
           ok: true,
-          statusCode: resp.statusCode,
-          body: {
-            accountName: this.accountName,
-            projectSlug: projectSlug,
-            version: o.version,
-            link: `https://ci.appveyor.com/project/${this.accountName}/${projectSlug}/build/${o.version}`
-          }
-        });
+          statusCode: res.statusCode,
+          body: JSON.parse(Buffer.concat(chunks).toString('utf8'))
+        }));
       });
+
+      req.on('error', reject);
+
+      if (data) {
+        req.write(JSON.stringify(data));
+      }
+
+      req.end();
     });
-  }
-
-  public builds(projectSlug, count) {
-    return new Promise<IBuildsResponse>((resolve, reject) => {
-      this.get(`https://ci.appveyor.com/api/projects/${this.accountName}/${projectSlug}/history?recordsNumber=${count}`, (err, resp, data) => {
-        if (err) return reject(err);
-        if (resp.statusCode !== 200) return resolve({ ok: false, statusCode: resp.statusCode });
-
-        const o = JSON.parse(data);
-
-        resolve({
-          ok: true,
-          statusCode: resp.statusCode,
-          body: {
-            accountName: this.accountName,
-            projectSlug: projectSlug,
-            builds: o.builds.map((build) => ({
-              version: build.version,
-              message: build.message,
-              branch: build.branch,
-              committer: build.committerName,
-              status: build.status,
-              link: `https://ci.appveyor.com/project/${this.accountName}/${projectSlug}/build/${build.version}`
-            }))
-          }
-        });
-      });
-    });
-  }
-
-  public deploy(projectSlug, version, environment) {
-    const body = JSON.stringify({
-      environmentName: environment,
-      accountName: this.accountName,
-      projectSlug: projectSlug,
-      buildVersion: version
-    });
-
-    return new Promise<IDeployResponse>((resolve, reject) => {
-      this.post('https://ci.appveyor.com/api/deployments', body, (err, resp, data) => {
-        if (err) return reject(err);
-        if (resp.statusCode !== 200) return resolve({
-          ok: false,
-          statusCode: resp.statusCode
-        });
-
-        const o = JSON.parse(data);
-
-        resolve({
-          ok: true,
-          statusCode: resp.statusCode,
-          body: {
-            link: `https://ci.appveyor.com/project/${this.accountName}/${projectSlug}/deployment/${o.deploymentId}`
-          }
-        });
-      });
-    });
-  }
-
-  private post(url: string, body: string, callback: (err: Error, resp: IHttpResponse, data: string) => void) {
-    this.http(url)
-      .header('Authorization', `Bearer ${this.token}`)
-      .header('Content-Type', 'application/json')
-      .header('Accept', 'application/json')
-      .post(body)(callback);
-  }
-
-  private get(url: string, callback: (err: Error, resp: IHttpResponse, data: string) => void) {
-    this.http(url)
-      .header('Authorization', `Bearer ${this.token}`)
-      .header('Content-Type', 'application/json')
-      .header('Accept', 'application/json')
-      .get()(callback);
   }
 }
