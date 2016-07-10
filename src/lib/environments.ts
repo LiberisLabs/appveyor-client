@@ -1,45 +1,29 @@
 import AppVeyorClient from './appveyor';
 
-export interface IAddEnvironmentRequest {
+interface INameValue {
   name: string;
-  provider: string;
-  settings: {
-    providerSettings: Array<{
-      name: string;
-      value: {
-        value: string;
-        isEncrypted: boolean;
-      }
-    }>;
-    environmentVariables: Array<{
-      name: string;
-      value: {
-        value: string;
-        isEncrypted: boolean;
-      }
-    }>;
+  value: {
+    value: string;
+    isEncrypted: boolean;
   }
 }
 
-export interface IUpdateEnvironmentRequest {
+interface IAddEnvironmentRequest {
+  name: string;
+  provider: string;
+  settings: {
+    providerSettings: Array<INameValue>;
+    environmentVariables: Array<INameValue>;
+  }
+}
+
+interface IUpdateEnvironmentRequest {
   deploymentEnvironmentId: number;
   name: string;
   environmentAccessKey: string;
   settings: {
-    providerSettings: Array<{
-      name: string;
-      value: {
-        value: string;
-        isEncrypted: boolean;
-      }
-    }>;
-    environmentVariables: Array<{
-      name: string;
-      value: {
-        value: string;
-        isEncrypted: boolean;
-      }
-    }>;
+    providerSettings: Array<INameValue>;
+    environmentVariables: Array<INameValue>;
     provider: string;
   }
 }
@@ -47,27 +31,27 @@ export interface IUpdateEnvironmentRequest {
 export default class {
   constructor(private _client: AppVeyorClient) { }
 
-  public getEnvironment() {
+  getEnvironment() {
     return this._client.get('/api/environments');
   }
 
-  public getEnvironmentSettings(deploymentEnvironmentId: number) {
+  getEnvironmentSettings(deploymentEnvironmentId: number) {
     return this._client.get(`/api/environments/{deploymentEnvironmentId}/settings`);
   }
 
-  public getEnvironmentDeployments(deploymentEnvironmentId: number) {
+  getEnvironmentDeployments(deploymentEnvironmentId: number) {
     return this._client.get(`/api/environments/{deploymentEnvironmentId}/deployments`);
   }
 
-  public addEnvironment(body: IAddEnvironmentRequest) {
+  addEnvironment(body: IAddEnvironmentRequest) {
     return this._client.post('/api/environments', body);
   }
 
-  public updateEnvironment(body: IUpdateEnvironmentRequest) {
+  updateEnvironment(body: IUpdateEnvironmentRequest) {
     return this._client.put('/api/environments', body);
   }
 
-  public deleteEnvironment(deploymentEnvironmentId: number) {
+  deleteEnvironment(deploymentEnvironmentId: number) {
     return this._client.delete(`/api/environments/{deploymentEnvironmentId}`);
   }
 }

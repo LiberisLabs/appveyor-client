@@ -1,6 +1,6 @@
 import AppVeyorClient from './appveyor';
 
-export interface IStartDeploymentRequest {
+interface IStartDeploymentRequest {
   environmentName: string;
   accountName: string;
   projectSlug: string;
@@ -9,18 +9,22 @@ export interface IStartDeploymentRequest {
   environmentVariables: {[key: string]: string};
 }
 
+interface ICancelDeploymentRequest {
+  deploymentId: number;
+}
+
 export default class {
   constructor(private _client: AppVeyorClient) { }
 
-  public getDeployment(deploymentId: number) {
-    return this._client.get(`/api/deployments{deploymentId}`)
+  getDeployment(deploymentId: number) {
+    this._client.get(`/api/deployments{deploymentId}`)
   }
 
-  public startDeployment(body: IStartDeploymentRequest) {
-    return this._client.post(`/api/deployments`, body);
+  startDeployment(body: IStartDeploymentRequest) {
+    this._client.post(`/api/deployments`, body);
   }
 
-  public cancelDeployment(body: {deploymentId: number}) {
-    return this._client.put(`/api/deployments/stop`, body);
+  cancelDeployment(body: ICancelDeploymentRequest) {
+    this._client.put(`/api/deployments/stop`, body);
   }
 }

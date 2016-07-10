@@ -1,15 +1,15 @@
 import * as http from 'http';
 
-export interface IResponse {
+interface IResponse {
   ok: boolean;
   statusCode: number;
   body: any;
 }
 
 export default class {
-  public protocol: string;
-  public hostname: string;
-  public port: number;
+  protocol: string;
+  hostname: string;
+  port: number;
 
   constructor(private _token: string) {
     this.protocol = 'https:';
@@ -17,19 +17,19 @@ export default class {
     this.port = 443;
   }
 
-  public get(path: string): Promise<IResponse> {
+  get(path: string) {
     return this.do('GET', path);
   }
 
-  public post(path: string, data: any): Promise<IResponse> {
+  post(path: string, data: any) {
     return this.do('POST', path, data);
   }
 
-  public put(path: string, data: any): Promise<IResponse> {
+  put(path: string, data: any) {
     return this.do('PUT', path, data);
   }
 
-  public delete(path: string): Promise<IResponse> {
+  delete(path: string) {
     return this.do('DELETE', path);
   }
 

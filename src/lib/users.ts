@@ -1,41 +1,45 @@
 import AppVeyorClient from './appveyor';
 
+interface IAddUserRequest {
+  fullName: string;
+  email: string;
+  roleId: number;
+  generatePassword: boolean;
+  password: string;
+  confirmPassword: string;
+}
+
+interface IUpdateUserRequest {
+  userId: number;
+  fullName: string;
+  email: string;
+  password: string;
+  roleId: number;
+  successfulBuildNotification: string;
+  failedBuildNotification: string;
+  notifyWhenBuildStatusChangedOnly: boolean;
+}
+
 export default class {
   constructor(private _client: AppVeyorClient) { }
 
-  public getUsers() {
+  getUsers() {
     return this._client.get('/api/users');
   }
 
-  public getUser(userId: number) {
+  getUser(userId: number) {
     return this._client.get(`/api/users/{userId}`);
   }
 
-  public addUser(body: {
-    fullName: string,
-    email: string,
-    roleId: number,
-    generatePassword: boolean,
-    password: string,
-    confirmPassword: string
-  }) {
+  addUser(body: IAddUserRequest) {
     return this._client.post('/api/users', body);
   }
 
-  public updateUser(body: {
-    userId: number,
-    fullName: string,
-    email: string,
-    password: string,
-    roleId: number,
-    successfulBuildNotification: string,
-    failedBuildNotification: string,
-    notifyWhenBuildStatusChangedOnly: boolean
-  }) {
+  updateUser(body: IUpdateUserRequest) {
     return this._client.put('/api/users', body);
   }
 
-  public deleteUser(userId: number) {
+  deleteUser(userId: number) {
     return this._client.delete(`/api/users/{userId}`);
   }
 }
