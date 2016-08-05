@@ -14,11 +14,11 @@ export default class {
     this._client = new AppVeyorClient(_token);
   }
 
-  projects()      { return new ProjectsClient(this._client); }
-  builds()        { return new BuildsClient(this._client); }
-  environments()  { return new EnvironmentsClient(this._client); }
-  deployments()   { return new DeploymentsClient(this._client); }
-  users()         { return new UsersClient(this._client); }
-  collaborators() { return new CollaboratorsClient(this._client); }
-  roles()         { return new RolesClient(this._client); }
+  get projects()      { return new ProjectsClient(this._client); }
+  get builds()        { return new BuildsClient(this._client); }
+  get environments()  { return new EnvironmentsClient(this._client); }
+  get deployments()   { return new DeploymentsClient(this._client); }
+  get users()         { return new UsersClient(this._client); }
+  get collaborators() { return new CollaboratorsClient(this._client); }
+  get roles()         { return new RolesClient(this._client); }
 }
