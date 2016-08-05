@@ -47,6 +47,12 @@ export default class {
       }
     };
 
+    let buf;
+    if (data) {
+      buf = Buffer.from(JSON.stringify(data));
+      options.headers['Content-Length'] = buf.length;
+    }
+
     return new Promise((resolve, reject) => {
       let req = http.request(options, (res) => {
         if (res.statusCode < 200 || res.statusCode >= 300) {
@@ -65,7 +71,7 @@ export default class {
       req.on('error', reject);
 
       if (data) {
-        req.write(JSON.stringify(data));
+        req.write(buf);
       }
 
       req.end();
